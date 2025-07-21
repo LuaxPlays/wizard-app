@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Wizard Point Companion App</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    input[type="number"] { width: 50px; }
+    .runde { margin-top: 20px; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <h1>🧙 Wizard Point Companion App</h1>
+  <div id="setup">
+    <label>Anzahl Spieler (3–6): <input type="number" id="playerCount" min="3" max="6"></label>
+    <button onclick="startGame()">Starten</button>
+  </div>
+
+  <div id="game" class="hidden">
+    <h2 id="roundTitle"></h2>
+    <div id="inputSection"></div>
+    <button onclick="submitRound()">Runde abschließen</button>
+
+    <div class="runde">
+      <h3>Punktestand</h3>
+      <ul id="scores"></ul>
+    </div>
+  </div>
+
+  <div id="endScreen" class="hidden">
+    <h2>🎉 Spiel beendet! Endstand:</h2>
+    <ul id="finalScores"></ul>
+  </div>
+
+  <script>
+    let playerCount = 0;
+    let roundCount = 0;
+    let currentRound = 0;
+    let predictions = [];
+    let results = [];
+    let scores = [];
+
+    function startGame() {
+      playerCount = parseInt(document.getElementById("playerCount").value);
+      if (playerCount < 3 || playerCount > 6) {
+        alert("Bitte gib eine Zahl zwischen 3 und 6 ein.");
+        return;
+      }
+
+      roundCount = {3: 20, 4: 15, 5: 12, 6: 10}[playerCount];
+      predictions = Array.from({length: roundCount}, () => Array(playerCount).fill(0));
+      results = Array.from({length: roundCount}, () => Array(playerCount).fill(0));
+      scores = Array(playerCount).fill(0);
+      currentRound = 0;
+
+      document.getElementById("setup").classList.add("hidden");
+      document.getElementById("game").classList.remove("hidden");
+
+      showRound();
+    }
+
+    function showRound() {
+      document.getElementById("roundTitle").textContent = `Runde ${currentRound + 1} von ${roundCount}`;
+      const inputSection = document.getElementById("inputSection");
+      inputSection.innerHTML = "";
+
+      const vorh = document.createElement("div");
+      vorh.innerHTML = "<h3>Vorhersagen:</h3>";
+      for (let i = 0; i < playerCount; i++) {
+        vorh.innerHTML += `Spieler ${i + 1}: <input type="number" id="pred-${i}" min="0"><br>`;
+      }
+      inputSection.appendChild(vorh);
+
+      const res = document.createElement("div");
+      res.innerHTML = "<h3>Ergebnisse:</h3>";
+      for (let i = 0; i < playerCount; i++) {
+        res.innerHTML += `Spieler ${i + 1}: <input type="number" id="res-${i}" min="0"><br>`;
+      }
+      inputSection.appendChild(res);
+    }
+
+    function submitRound() {
+      for (let i = 0; i < playerCount; i++) {
+        const pred = parseInt(document.getElementById(`pred-${i}`).value) || 0;
+        const res = parseInt(document.getElementById(`res-${i}`).value) || 0;
+        predictions[currentRound][i] = pred;
+        results[currentRound][i] = res;
+
+        if (pred === res) {
+          scores[i] += 20 + pred * 10;
+        } else {
+          scores[i] -= Math.abs(pred - res) * 10;
+        }
+      }
+
+      updateScores();
+      currentRound++;
+
+      if (currentRound >= roundCount) {
+        showFinalScores();
+      } else {
+        showRound();
+      }
+    }
+
+    function updateScores() {
+      const ul = document.getElementById("scores");
+      ul.innerHTML = "";
+      for (let i = 0; i < playerCount; i++) {
+        ul.innerHTML += `<li>Spieler ${i + 1}: ${scores[i]} Punkte</li>`;
+      }
+    }
+
+    function showFinalScores() {
+      document.getElementById("game").classList.add("hidden");
+      document.getElementById("endScreen").classList.remove("hidden");
+
+      const ul = document.getElementById("finalScores");
+      ul.innerHTML = "";
+      for (let i = 0; i < playerCount; i++) {
+        ul.innerHTML += `<li>Spieler ${i + 1}: ${scores[i]} Punkte</li>`;
+      }
+    }
+  </script>
+</body>
+</html>
